@@ -129,7 +129,8 @@
     const CENTRO = [-41.133, -71.31];   // centro inicial del mapa (zona de obra)
     const ZOOM   = 12;
     const INTERVALO_SEG = 4;            // mínimo entre envíos por movimiento
-    const OFFLINE_SEG   = 30;           // sin señal después de N seg sin actualizar
+    const OFFLINE_SEG   = 30;           // "sin señal" después de N seg sin actualizar
+    const ABANDONO_SEG  = 600;          // se oculta del mapa si no se actualiza hace N seg (transmisión abandonada)
     // ========================================================
 
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -248,11 +249,13 @@
         return () => { cancel=true; sb.removeChannel(ch); clearInterval(t); };
       }, []);
 
-      const esViejo = (f) => (Date.now() - new Date(f.actualizado).getTime()) > OFFLINE_SEG*1000;
+      const segDesde   = (f) => (Date.now() - new Date(f.actualizado).getTime()) / 1000;
+      const esViejo    = (f) => segDesde(f) > OFFLINE_SEG;          // "sin señal" (gris)
+      const visible    = (f) => f.activo && segDesde(f) < ABANDONO_SEG; // se muestra en el mapa
 
       useEffect(() => {
         const map = mapRef.current; if (!map) return;
-        const vivos = Object.values(units).filter(f => f.activo);
+        const vivos = Object.values(units).filter(visible);
         const ids = new Set(vivos.map(f => f.unit_id));
         Object.keys(markers.current).forEach(id => {
           if (!ids.has(id)) { map.removeLayer(markers.current[id]); delete markers.current[id]; }
@@ -260,7 +263,10 @@
         vivos.forEach(f => {
           const off = esViejo(f);
           const veh = asVeh(f.vehiculos);
-          const icon = L.divIcon({ html:pinHTML(off, (f.referencia||"Recorrida").slice(0,22)), iconSize:[110,52], iconAnchor:[55,40], className:"" });
+          const v0 = veh[0];
+          let etiqueta = v0 ? (v0.nombre || tipoNombre(v0.tipo)) : (f.referencia || "Recorrida");
+          if (veh.length > 1) etiqueta += " +" + (veh.length - 1);
+          const icon = L.divIcon({ html:pinHTML(off, etiqueta.slice(0,22)), iconSize:[110,52], iconAnchor:[55,40], className:"" });
           const cuerpo = veh.map(v =>
             `<div><b>${v.nombre||tipoNombre(v.tipo)}</b> <span style="font-size:11px;color:#64748b">(${tipoNombre(v.tipo)})</span>` +
             (v.personas&&v.personas.length ? `<br><span style="color:#64748b">${v.personas.join(", ")}</span>` : "") + `</div>`
@@ -278,7 +284,7 @@
         }
       }, [units, tick]);
 
-      const lista = Object.values(units).filter(f => f.activo);
+      const lista = Object.values(units).filter(visible);
       return (
         <div className="maparea">
           <div id="map"></div>
