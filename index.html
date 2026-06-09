@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Rastreo de personal — veda</title>
+  <title>Registro y rastreo — veda</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -26,7 +26,6 @@
     svg{ display:block; }
     .pantalla{ height:100%; display:flex; flex-direction:column; }
 
-    /* Barra superior */
     .topbar{ background:var(--tinta); color:#fff; padding:0 14px; min-height:56px; display:flex; align-items:center; gap:12px; flex:none; }
     .topbar .titulo{ font-size:15px; font-weight:600; letter-spacing:.2px; }
     .topbar .sub{ font-size:12px; color:#94a3b8; margin-top:1px; }
@@ -42,78 +41,108 @@
     @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)} 70%{box-shadow:0 0 0 9px rgba(34,197,94,0)} 100%{box-shadow:0 0 0 0 rgba(34,197,94,0)} }
     .estado .ref{ color:#94a3b8; font-weight:500; }
 
-    /* Formulario / editor */
-    .scroll{ overflow-y:auto; flex:1; }
-    .form{ padding:18px; max-width:560px; margin:0 auto; width:100%; }
-    .card{ background:#fff; border:1px solid var(--linea); border-radius:12px; padding:18px; margin-bottom:14px; }
-    .card>h3{ margin:0 0 14px; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); }
+    /* Genéricos */
     label{ display:block; font-size:12.5px; font-weight:600; color:var(--tinta2); margin:0 0 6px; }
     input,select{ width:100%; padding:11px 12px; border:1px solid #cbd5e1; border-radius:9px; background:#fff; }
     input::placeholder{ color:#94a3b8; }
     input:focus,select:focus{ outline:none; border-color:var(--acento); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
-
-    .veh{ border:1px solid var(--linea); border-radius:11px; padding:14px; margin-bottom:12px; background:#fbfcfe; }
-    .veh-head{ display:flex; gap:8px; align-items:center; margin-bottom:12px; }
-    .veh-head select{ flex:none; width:150px; }
-    .veh-head input{ flex:1; }
-    .icon-btn{ flex:none; width:38px; height:38px; display:flex; align-items:center; justify-content:center; border:1px solid #cbd5e1; background:#fff; color:var(--muted); border-radius:9px; }
-    .icon-btn:hover{ border-color:#94a3b8; color:var(--tinta); }
-    .icon-btn.danger:hover{ border-color:#fca5a5; color:var(--danger); background:#fef2f2; }
-    .abordo{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#94a3b8; margin:2px 0 9px; }
-    .per{ display:flex; gap:6px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
-    .per input{ flex:1; min-width:120px; }
-    .per .mover{ flex:none; width:130px; padding:8px 9px; font-size:12.5px; color:var(--acento); border-color:#cdd9ee; }
-    .per .icon-btn{ width:36px; height:36px; }
-    .link-add{ display:inline-flex; align-items:center; gap:6px; padding:7px 2px; background:none; border:none; color:var(--acento); font-weight:600; font-size:13.5px; }
-    .link-add:hover{ color:var(--acento-d); }
-    .add-veh{ width:100%; display:flex; align-items:center; justify-content:center; gap:7px; padding:11px; border:1px dashed #b6c2d4; background:#fff; color:var(--acento); border-radius:10px; font-weight:600; }
-    .add-veh:hover{ background:#f8faff; border-color:var(--acento); }
-    .empty{ color:#94a3b8; font-size:13px; padding:6px 0; }
-
     .btn{ width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px; border:1px solid transparent; border-radius:10px; font-size:15px; font-weight:600; }
     .btn-primary{ background:var(--acento); color:#fff; }
     .btn-primary:hover{ background:var(--acento-d); }
     .btn-primary:disabled{ background:#94a3b8; cursor:default; }
-    .btn-danger-ghost{ height:36px; width:auto; padding:0 14px; border:1px solid #fca5a5; background:#fff; color:var(--danger); border-radius:8px; font-size:13.5px; }
+    .btn-ghost{ background:#fff; border:1px solid #cbd5e1; color:var(--tinta2); }
+    .btn-danger-ghost{ height:36px; width:auto; padding:0 14px; border:1px solid #fca5a5; background:#fff; color:var(--danger); border-radius:8px; font-size:13.5px; font-weight:600; }
     .btn-danger-ghost:hover{ background:#fef2f2; }
-    .err{ color:var(--danger); font-size:13px; margin:12px 0 0; }
+    .icon-btn{ flex:none; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:1px solid #cbd5e1; background:#fff; color:var(--muted); border-radius:9px; }
+    .icon-btn.danger:hover{ border-color:#fca5a5; color:var(--danger); background:#fef2f2; }
+
+    /* Operario — armado */
+    .op-body{ overflow-y:auto; flex:1; }
+    .op-inner{ max-width:680px; margin:0 auto; width:100%; padding:16px; }
+    .card{ background:#fff; border:1px solid var(--linea); border-radius:12px; padding:16px; margin-bottom:14px; }
+    .card h3{ margin:0 0 12px; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); }
+    .scan{ display:flex; gap:8px; align-items:center; }
+    .scan input{ font-size:16px; padding:13px 14px; }
+    .scan .lupa{ flex:none; }
+    .hint{ font-size:12px; color:var(--muted); margin-top:8px; }
+
+    .cuad{ border:1px solid var(--linea); border-radius:11px; margin-bottom:10px; background:#fff; overflow:hidden; }
+    .cuad.activa{ border-color:var(--acento); box-shadow:0 0 0 2px rgba(37,99,235,.15); }
+    .cuad-head{ display:flex; align-items:center; gap:10px; padding:11px 12px; background:#f8fafc; border-bottom:1px solid var(--linea); cursor:pointer; }
+    .cuad.activa .cuad-head{ background:#eff6ff; }
+    .cuad-head .pat{ font-weight:800; font-size:15px; letter-spacing:.3px; }
+    .cuad-head .desc{ font-size:12.5px; color:var(--muted); }
+    .cuad-head .activa-tag{ margin-left:auto; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--acento); background:#dbeafe; padding:2px 7px; border-radius:5px; }
+    .cuad-body{ padding:8px 12px 12px; }
+    .persona{ display:flex; align-items:center; gap:10px; padding:7px 2px; border-top:1px solid #f1f5f9; }
+    .persona:first-child{ border-top:none; }
+    .persona .pdni{ font-family:ui-monospace,monospace; font-size:12px; color:var(--muted); width:74px; flex:none; }
+    .persona .pnom{ font-size:13.5px; font-weight:600; }
+    .persona .pemp{ font-size:11.5px; color:var(--muted); }
+    .persona .icon-btn{ margin-left:auto; width:30px; height:30px; }
+    .sin-personas{ color:#94a3b8; font-size:12.5px; padding:6px 2px; }
+    .grabar{ width:100%; margin-top:10px; padding:12px; border:none; border-radius:9px; background:var(--acento); color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; }
+    .grabar:hover{ background:var(--acento-d); }
+    .tag{ display:inline-block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#475569; background:#eef2f7; border:1px solid #e2e8f0; padding:2px 7px; border-radius:5px; }
+
+    /* Operario — operando (pantalla partida) */
+    .op-split{ flex:1; display:flex; min-height:0; }
+    .op-left{ width:50%; max-width:560px; display:flex; flex-direction:column; border-right:1px solid var(--linea); background:var(--bg); min-width:0; }
+    .op-left .barra{ padding:12px; background:#fff; border-bottom:1px solid var(--linea); }
+    .op-left .lista{ overflow-y:auto; padding:12px; flex:1; }
+    .op-right{ flex:1; position:relative; display:flex; min-width:0; min-height:0; }
+    @media (max-width:760px){
+      .op-split{ flex-direction:column; }
+      .op-left{ width:auto; max-width:none; height:55%; border-right:none; border-bottom:1px solid var(--linea); }
+      .op-right{ flex:1; }
+    }
 
     /* Mapa */
     #map{ width:100%; height:100%; }
     .maparea{ position:relative; flex:1; }
-    .panel{ position:absolute; left:12px; bottom:12px; z-index:1000; background:#fff; border:1px solid var(--linea); border-radius:11px; box-shadow:0 8px 24px rgba(15,23,42,.14); max-width:300px; max-height:56%; overflow:auto; }
-    .panel .ph{ padding:11px 14px; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); background:#f8fafc; border-bottom:1px solid var(--linea); position:sticky; top:0; }
-    .panel .item{ padding:12px 14px; border-top:1px solid #f1f5f9; }
+    .panel{ position:absolute; left:12px; bottom:12px; z-index:1000; background:#fff; border:1px solid var(--linea); border-radius:11px; box-shadow:0 8px 24px rgba(15,23,42,.14); max-width:280px; max-height:50%; overflow:auto; }
+    .panel .ph{ padding:10px 13px; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); background:#f8fafc; border-bottom:1px solid var(--linea); position:sticky; top:0; }
+    .panel .item{ padding:11px 13px; border-top:1px solid #f1f5f9; }
     .panel .item:first-of-type{ border-top:none; }
     .item .top{ display:flex; gap:9px; align-items:center; }
     .item .sdot{ width:9px; height:9px; border-radius:50%; flex:none; }
     .item .n{ font-weight:700; font-size:14px; }
-    .item .v{ font-size:13px; margin:8px 0 0 0; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+    .item .v{ font-size:13px; margin:7px 0 0; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
     .item .v .gente{ color:var(--muted); font-size:12.5px; width:100%; padding-left:2px; }
-    .item .meta{ font-size:12px; color:var(--muted); margin-top:9px; }
-    .tag{ display:inline-block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#475569; background:#eef2f7; border:1px solid #e2e8f0; padding:2px 7px; border-radius:5px; }
-
-    .chip{ position:absolute; right:12px; bottom:12px; z-index:1000; background:#fff; border:1px solid var(--linea); border-radius:10px; box-shadow:0 6px 18px rgba(15,23,42,.12); padding:9px 13px; font-size:12.5px; }
-    .chip .c{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--tinta2); }
+    .item .meta{ font-size:12px; color:var(--muted); margin-top:8px; }
+    .chip{ position:absolute; right:12px; bottom:12px; z-index:1000; background:#fff; border:1px solid var(--linea); border-radius:10px; box-shadow:0 6px 18px rgba(15,23,42,.12); padding:8px 12px; font-size:12px; }
+    .chip .c{ font-family:ui-monospace,monospace; color:var(--tinta2); }
     .chip .e{ color:var(--muted); }
-
     .vacio{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:500; pointer-events:none; }
-    .vacio span{ background:#fff; border:1px solid var(--linea); padding:12px 18px; border-radius:11px; box-shadow:0 6px 18px rgba(15,23,42,.1); color:var(--muted); font-size:14px; }
-
-    /* Transmisión: mapa principal + editor desplegable */
-    .split-map{ position:relative; display:flex; flex:1; min-width:0; min-height:0; }
-    .fab{ position:absolute; left:50%; transform:translateX(-50%); bottom:18px; z-index:1100; display:inline-flex; align-items:center; gap:8px; background:var(--acento); color:#fff; border:none; border-radius:24px; padding:12px 20px; font-size:14px; font-weight:600; box-shadow:0 6px 18px rgba(37,99,235,.4); }
-    .fab:hover{ background:var(--acento-d); }
-    .sheet{ position:absolute; left:0; right:0; bottom:0; z-index:1200; background:#fff; border-top:1px solid var(--linea); border-radius:16px 16px 0 0; box-shadow:0 -10px 30px rgba(15,23,42,.22); max-height:82%; display:flex; flex-direction:column; }
-    .sheet-head{ display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid var(--linea); }
-    .sheet-head .t{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); }
-    .sheet-head .icon-btn{ margin-left:auto; }
-    .sheet-body{ overflow-y:auto; padding:14px; }
+    .vacio span{ background:#fff; border:1px solid var(--linea); padding:11px 16px; border-radius:11px; box-shadow:0 6px 18px rgba(15,23,42,.1); color:var(--muted); font-size:13.5px; }
 
     .leaflet-div-icon{ background:transparent; border:none; }
     .marker{ text-align:center; line-height:1; }
     .marker .lbl{ font-size:11px; font-weight:600; background:var(--tinta); color:#fff; padding:2px 7px; border-radius:6px; white-space:nowrap; display:inline-block; margin-top:-3px; box-shadow:0 1px 3px rgba(0,0,0,.3); }
     .leaflet-popup-content{ font-size:13px; line-height:1.5; }
+
+    /* Modal grabar ubicación */
+    .modal-bg{ position:fixed; inset:0; background:rgba(15,23,42,.5); z-index:2000; display:flex; align-items:center; justify-content:center; padding:16px; }
+    .modal{ background:#fff; border-radius:14px; width:100%; max-width:460px; max-height:88%; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,.3); }
+    .modal-head{ padding:16px; border-bottom:1px solid var(--linea); }
+    .modal-head h3{ margin:0; font-size:16px; }
+    .modal-head p{ margin:4px 0 0; font-size:12.5px; color:var(--muted); }
+    .modal-body{ overflow-y:auto; padding:8px 16px; }
+    .check-row{ display:flex; align-items:center; gap:11px; padding:11px 4px; border-top:1px solid #f1f5f9; }
+    .check-row:first-child{ border-top:none; }
+    .check-row input[type=checkbox]{ width:20px; height:20px; flex:none; accent-color:var(--acento); }
+    .check-row .cl{ font-size:13.5px; }
+    .check-row .cl b{ font-weight:700; }
+    .check-row .cl small{ display:block; color:var(--muted); font-size:11.5px; }
+    .modal-foot{ padding:14px 16px; border-top:1px solid var(--linea); }
+    .modal-foot .ubic{ margin-bottom:12px; }
+    .modal-foot .acciones{ display:flex; gap:10px; }
+    .modal-foot .acciones .btn{ padding:12px; }
+
+    /* Toast */
+    .toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:2600; padding:12px 18px; border-radius:10px; color:#fff; font-weight:600; font-size:14px; box-shadow:0 8px 24px rgba(0,0,0,.25); max-width:90%; text-align:center; }
+    .toast.ok{ background:var(--ok); }
+    .toast.err{ background:var(--danger); }
   </style>
 </head>
 <body>
@@ -122,28 +151,40 @@
     const { useState, useEffect, useRef } = React;
 
     // ===================== CONFIGURACIÓN =====================
-    const SUPABASE_URL  = "https://zcbqtpzwmnyjoafzkssw.supabase.co";   // Supabase → Settings → API
+    // Supabase del RASTREO (posiciones GPS en vivo)
+    const SUPABASE_URL  = "https://zcbqtpzwmnyjoafzkssw.supabase.co";
     const SUPABASE_ANON = "sb_publishable_AkXrqIK_Yhk2rUfEDlfuHA_-vTiwfbo";
-    const CENTRO = [-41.133, -71.31];   // centro inicial del mapa (zona de obra)
+    // Supabase de CONTROLOBRA (lectura de personas/vehículos, schema obra)
+    const CONTROLOBRA_URL  = "https://fuqemgiaspxkvfktsjmo.supabase.co";
+    const CONTROLOBRA_ANON = "sb_publishable_HjbSY_QNP7X4SY83tbXM5g_b5ls7tjZ";
+    // Google Apps Script Web App (escribe en el Google Sheet)
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz2rUf031AEgoTDwVtb90K86rwbfc_GPMO4fOrxF4U-M4-tKr1VtgoILxgyfClYu4AiGg/exec";
+
+    const CENTRO = [-41.133, -71.31];
     const ZOOM   = 12;
-    const INTERVALO_SEG = 4;            // mínimo entre envíos por movimiento
-    const OFFLINE_SEG   = 30;           // "sin señal" después de N seg sin actualizar
-    const ABANDONO_SEG  = 600;          // se oculta del mapa si no se actualiza hace N seg (transmisión abandonada)
+    const INTERVALO_SEG = 4;
+    const OFFLINE_SEG   = 30;
+    const ABANDONO_SEG  = 600;
     // ========================================================
 
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const sb     = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const sbObra = supabase.createClient(CONTROLOBRA_URL, CONTROLOBRA_ANON, { db:{ schema:"obra" } });
 
+    // tipos de pin para el mapa
     const TIPOS = [
-      { id:"camioneta",   nombre:"Camioneta" },
-      { id:"utv",         nombre:"UTV" },
-      { id:"cuatriciclo", nombre:"Cuatriciclo" },
-      { id:"apie",        nombre:"A pie" },
-      { id:"otro",        nombre:"Otro" },
+      { id:"camioneta", nombre:"Camioneta" }, { id:"utv", nombre:"UTV" },
+      { id:"cuatriciclo", nombre:"Cuatriciclo" }, { id:"apie", nombre:"A pie" }, { id:"otro", nombre:"Otro" },
     ];
     const tipoNombre = (t) => (TIPOS.find(x=>x.id===t)||{}).nombre || "Unidad";
-    const parseJSON  = (s, def) => { try { return JSON.parse(s) || def; } catch(e){ return def; } };
-    // siempre devuelve un arreglo de vehículos, aunque el dato venga raro (no rompe el visor)
+    // mapea el tipo de ControlObra al tipo de pin
+    const TIPO_PIN = { Camioneta:"camioneta", "Camión":"otro", Combi:"otro", Colectivo:"otro", Auto:"otro", Maquinaria:"otro", Otro:"otro" };
+
+    const parseJSON = (s, def) => { try { return JSON.parse(s) || def; } catch(e){ return def; } };
     const asVeh = (s) => { const v = parseJSON(s, []); return Array.isArray(v) ? v : (v ? [v] : []); };
+    const pad2 = (n) => String(n).padStart(2,"0");
+    const hoyTexto   = () => { const d=new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; };
+    const ahoraTexto = () => { const d=new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`; };
+    const vehStr = (c) => c.sinVehiculo ? "" : (c.patente + (c.descripcion ? " " + c.descripcion : ""));
 
     function getUnitId(){
       let id = localStorage.getItem("unit_id");
@@ -153,11 +194,10 @@
 
     const Ico = {
       volver: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
-      mas:    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
       cerrar: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-      señal:  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>,
-      gestionar: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>,
-      bajar:  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>,
+      registro: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>,
+      lupa: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+      pin: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 6-9 13-9 13s-9-7-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
     };
 
     function pinHTML(off, label){
@@ -169,43 +209,6 @@
         </svg>
         <div class="lbl">${label}</div>
       </div>`;
-    }
-
-    // ===================== EDITOR DE VEHÍCULOS (reusable) =====================
-    // h = { setVeh, delVeh, addVeh, setPer, addPer, delPer, movePer }
-    function EditorVehiculos({ vehiculos, h, mover }){
-      return (
-        <>
-          {vehiculos.map((v,i)=>(
-            <div className="veh" key={i}>
-              <div className="veh-head">
-                <select value={v.tipo} onChange={e=>h.setVeh(i,"tipo",e.target.value)}>
-                  {TIPOS.map(t=><option key={t.id} value={t.id}>{t.nombre}</option>)}
-                </select>
-                <input value={v.nombre} onChange={e=>h.setVeh(i,"nombre",e.target.value)} placeholder="Identificación / patente" />
-                <button className="icon-btn danger" title="Quitar vehículo" onClick={()=>h.delVeh(i)}>{Ico.cerrar}</button>
-              </div>
-              <div className="abordo">A bordo</div>
-              {v.personas.map((p,pi)=>(
-                <div className="per" key={pi}>
-                  <input value={p} onChange={e=>h.setPer(i,pi,e.target.value)} placeholder="Nombre y apellido" />
-                  {mover && vehiculos.length>1 && (
-                    <select className="mover" value="" onChange={e=>{ if(e.target.value!=="") h.movePer(i,pi,Number(e.target.value)); }}>
-                      <option value="">Mover a…</option>
-                      {vehiculos.map((vv,j)=> j!==i ? <option key={j} value={j}>{vv.nombre||tipoNombre(vv.tipo)}</option> : null)}
-                    </select>
-                  )}
-                  <button className="icon-btn danger" title="Quitar persona" onClick={()=>h.delPer(i,pi)}>{Ico.cerrar}</button>
-                </div>
-              ))}
-              {v.personas.length===0 && <div className="empty">Sin personas</div>}
-              <button className="link-add" onClick={()=>h.addPer(i)}>{Ico.mas} Agregar persona</button>
-            </div>
-          ))}
-          {vehiculos.length===0 && <div className="empty">Sin vehículos</div>}
-          <button className="add-veh" onClick={h.addVeh}>{Ico.mas} Agregar vehículo</button>
-        </>
-      );
     }
 
     // ===================== MAPA EN VIVO (compartido) =====================
@@ -223,7 +226,7 @@
         osm.addTo(map);
         L.control.layers({ "Mapa":osm, "Satélite":sat }).addTo(map);
         mapRef.current = map;
-        setTimeout(() => map.invalidateSize(), 200);
+        setTimeout(() => map.invalidateSize(), 250);
         return () => map.remove();
       }, []);
 
@@ -237,29 +240,21 @@
         refetch();
         const ch = sb.channel("pos")
           .on("postgres_changes", { event:"*", schema:"public", table:"posiciones" }, (payload) => {
-            setUnits(prev => {
-              const next = { ...prev };
-              if (payload.eventType === "DELETE") delete next[payload.old.unit_id];
-              else next[payload.new.unit_id] = payload.new;
-              return next;
-            });
+            setUnits(prev => { const n={...prev}; if(payload.eventType==="DELETE") delete n[payload.old.unit_id]; else n[payload.new.unit_id]=payload.new; return n; });
           }).subscribe();
-        // refresco de respaldo cada 5 s (por si Realtime se corta) + recálculo de "sin señal"
         const t = setInterval(() => { refetch(); setTick(x=>x+1); }, 5000);
         return () => { cancel=true; sb.removeChannel(ch); clearInterval(t); };
       }, []);
 
-      const segDesde   = (f) => (Date.now() - new Date(f.actualizado).getTime()) / 1000;
-      const esViejo    = (f) => segDesde(f) > OFFLINE_SEG;          // "sin señal" (gris)
-      const visible    = (f) => f.activo && segDesde(f) < ABANDONO_SEG; // se muestra en el mapa
+      const segDesde = (f) => (Date.now() - new Date(f.actualizado).getTime()) / 1000;
+      const esViejo  = (f) => segDesde(f) > OFFLINE_SEG;
+      const visible  = (f) => f.activo && segDesde(f) < ABANDONO_SEG;
 
       useEffect(() => {
         const map = mapRef.current; if (!map) return;
         const vivos = Object.values(units).filter(visible);
         const ids = new Set(vivos.map(f => f.unit_id));
-        Object.keys(markers.current).forEach(id => {
-          if (!ids.has(id)) { map.removeLayer(markers.current[id]); delete markers.current[id]; }
-        });
+        Object.keys(markers.current).forEach(id => { if(!ids.has(id)){ map.removeLayer(markers.current[id]); delete markers.current[id]; } });
         vivos.forEach(f => {
           const off = esViejo(f);
           const veh = asVeh(f.vehiculos);
@@ -267,21 +262,12 @@
           let etiqueta = v0 ? (v0.nombre || tipoNombre(v0.tipo)) : (f.referencia || "Recorrida");
           if (veh.length > 1) etiqueta += " +" + (veh.length - 1);
           const icon = L.divIcon({ html:pinHTML(off, etiqueta.slice(0,22)), iconSize:[110,52], iconAnchor:[55,40], className:"" });
-          const cuerpo = veh.map(v =>
-            `<div><b>${v.nombre||tipoNombre(v.tipo)}</b> <span style="font-size:11px;color:#64748b">(${tipoNombre(v.tipo)})</span>` +
-            (v.personas&&v.personas.length ? `<br><span style="color:#64748b">${v.personas.join(", ")}</span>` : "") + `</div>`
-          ).join("");
+          const cuerpo = veh.map(v => `<div><b>${v.nombre||tipoNombre(v.tipo)}</b>` + (v.personas&&v.personas.length?`<br><span style="color:#64748b">${v.personas.join(", ")}</span>`:"") + `</div>`).join("");
           const popup = `<b>${f.referencia||"Recorrida"}</b><br>${cuerpo}`;
-          if (markers.current[f.unit_id]) {
-            markers.current[f.unit_id].setLatLng([f.lat,f.lng]).setIcon(icon).setPopupContent(popup);
-          } else {
-            markers.current[f.unit_id] = L.marker([f.lat,f.lng], { icon }).addTo(map).bindPopup(popup);
-          }
+          if (markers.current[f.unit_id]) markers.current[f.unit_id].setLatLng([f.lat,f.lng]).setIcon(icon).setPopupContent(popup);
+          else markers.current[f.unit_id] = L.marker([f.lat,f.lng], { icon }).addTo(map).bindPopup(popup);
         });
-        if (!fitDone.current && vivos.length) {
-          fitDone.current = true;
-          map.fitBounds(L.latLngBounds(vivos.map(f => [f.lat,f.lng])).pad(0.3));
-        }
+        if (!fitDone.current && vivos.length) { fitDone.current=true; map.fitBounds(L.latLngBounds(vivos.map(f=>[f.lat,f.lng])).pad(0.3)); }
       }, [units, tick]);
 
       const lista = Object.values(units).filter(visible);
@@ -293,22 +279,12 @@
             <div className="panel">
               <div className="ph">Grupos en ruta</div>
               {lista.map(f => {
-                const off = esViejo(f);
-                const veh = asVeh(f.vehiculos);
+                const off = esViejo(f); const veh = asVeh(f.vehiculos);
                 return (
                   <div key={f.unit_id} className="item">
-                    <div className="top">
-                      <span className="sdot" style={{background: off ? "#94a3b8" : "var(--ok)"}}></span>
-                      <span className="n">{f.referencia||"Recorrida"}</span>
-                    </div>
-                    {veh.map((v,i)=>(
-                      <div className="v" key={i}>
-                        <span className="tag">{tipoNombre(v.tipo)}</span>
-                        <span>{v.nombre || tipoNombre(v.tipo)}</span>
-                        {v.personas && v.personas.length>0 && <span className="gente">{v.personas.join(", ")}</span>}
-                      </div>
-                    ))}
-                    <div className="meta">{off ? "Sin señal" : "En vivo"} · precisión ±{Math.round(f.exactitud||0)} m</div>
+                    <div className="top"><span className="sdot" style={{background: off ? "#94a3b8" : "var(--ok)"}}></span><span className="n">{f.referencia||"Recorrida"}</span></div>
+                    {veh.map((v,i)=>(<div className="v" key={i}><span className="tag">{tipoNombre(v.tipo)}</span><span>{v.nombre||tipoNombre(v.tipo)}</span>{v.personas&&v.personas.length>0 && <span className="gente">{v.personas.join(", ")}</span>}</div>))}
+                    <div className="meta">{off ? "Sin señal" : "En vivo"} · ±{Math.round(f.exactitud||0)} m</div>
                   </div>
                 );
               })}
@@ -318,190 +294,362 @@
       );
     }
 
-    // ===================== VISOR (público) =====================
+    // ===================== VISOR (cliente) =====================
     function Visor({ go }){
       return (
         <div className="pantalla">
           <div className="topbar">
-            <div>
-              <div className="titulo">Rastreo en vivo</div>
-              <div className="sub">Seguimiento de recorridas</div>
-            </div>
-            <div className="right">
-              <button className="tb-btn" onClick={()=>go("track")}>{Ico.señal} Transmitir</button>
-            </div>
+            <div><div className="titulo">Rastreo en vivo</div><div className="sub">Seguimiento de recorridas</div></div>
+            <div className="right"><button className="tb-btn" onClick={()=>go("operario")}>{Ico.registro} Operario</button></div>
           </div>
           <MapaVivo/>
         </div>
       );
     }
 
-    // ===================== TRACKER (carga + transmisión) =====================
-    function Tracker({ go }){
-      const saved = parseJSON(localStorage.getItem("visita_cfg"), {});
-      const [referencia, setReferencia] = useState(saved.referencia || "");
-      const [vehiculos, setVehiculos]   = useState(saved.vehiculos || [{ tipo:"camioneta", nombre:"", personas:[""] }]);
-      const [activo, setActivo] = useState(false);
-      const [pos, setPos]       = useState(null);
-      const [error, setError]   = useState("");
-      const [stale, setStale]   = useState(false);
-      const [editorAbierto, setEditorAbierto] = useState(false);
-      const watchRef = useRef(null);
-      const wakeRef  = useRef(null);
-      const lastSent = useRef(0);
-      const posRef   = useRef(null);
-      const unitId   = useRef(getUnitId());
+    // ===================== MODAL: grabar ubicación =====================
+    function GrabarModal({ cuadrilla, onCerrar, onGuardar }){
+      const [checkVeh, setCheckVeh] = useState(!cuadrilla.sinVehiculo);
+      const [checkPer, setCheckPer] = useState(() => { const o={}; cuadrilla.personas.forEach(p=>o[p.dni]=true); return o; });
+      const [ubic, setUbic] = useState("");
+      const [enviando, setEnviando] = useState(false);
+      const personasSel = cuadrilla.personas.filter(p => checkPer[p.dni]);
+      const vehSel = checkVeh && !cuadrilla.sinVehiculo;
+      const nada = personasSel.length===0 && !vehSel;
 
-      // handlers de edición
-      const h = {
-        setVeh:  (i,k,v) => setVehiculos(a => a.map((x,j)=> j===i ? {...x,[k]:v} : x)),
-        delVeh:  (i)     => setVehiculos(a => a.filter((_,j)=>j!==i)),
-        addVeh:  ()      => setVehiculos(a => [...a, { tipo:"camioneta", nombre:"", personas:[""] }]),
-        setPer:  (i,pi,v)=> setVehiculos(a => a.map((x,j)=> j===i ? {...x, personas:x.personas.map((p,k)=>k===pi?v:p)} : x)),
-        addPer:  (i)     => setVehiculos(a => a.map((x,j)=> j===i ? {...x, personas:[...x.personas, ""]} : x)),
-        delPer:  (i,pi)  => setVehiculos(a => a.map((x,j)=> j===i ? {...x, personas:x.personas.filter((_,k)=>k!==pi)} : x)),
-        movePer: (fromI,pi,toI) => setVehiculos(a => {
-          const nombre = a[fromI].personas[pi];
-          return a.map((x,j)=>{
-            if (j===fromI) return {...x, personas:x.personas.filter((_,k)=>k!==pi)};
-            if (j===toI)   return {...x, personas:[...x.personas, nombre]};
-            return x;
-          });
-        }),
-      };
-
-      const limpios = () => vehiculos
-        .map(v => ({ tipo:v.tipo, nombre:v.nombre.trim(), personas:v.personas.map(p=>p.trim()).filter(Boolean) }))
-        .filter(v => v.nombre || v.personas.length);
-
-      async function pedirWakeLock(){
-        try { if ("wakeLock" in navigator) wakeRef.current = await navigator.wakeLock.request("screen"); } catch(e){}
+      async function guardar(){
+        if (!ubic.trim() || nada || enviando) return;
+        setEnviando(true);
+        const fh = ahoraTexto();
+        const vs = vehSel ? vehStr(cuadrilla) : "";
+        let filas = personasSel.map(p => ({ fechaHora:fh, ubicacion:ubic.trim(), dni:p.dni, nombre:p.nombre, apellido:p.apellido, empresa:p.empresa||"", vehiculo:vs }));
+        if (personasSel.length===0 && vs) filas = [{ fechaHora:fh, ubicacion:ubic.trim(), dni:"", nombre:"", apellido:"", empresa:cuadrilla.empresa||"", vehiculo:vs }];
+        await onGuardar(filas);
+        setEnviando(false);
       }
+
+      return (
+        <div className="modal-bg" onClick={onCerrar}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-head">
+              <h3>Grabar ubicación</h3>
+              <p>Destildá lo que no quieras registrar en este punto.</p>
+            </div>
+            <div className="modal-body">
+              {!cuadrilla.sinVehiculo && (
+                <label className="check-row">
+                  <input type="checkbox" checked={checkVeh} onChange={e=>setCheckVeh(e.target.checked)} />
+                  <span className="cl"><b>{cuadrilla.patente}</b> — {cuadrilla.descripcion||"Vehículo"} <small>Vehículo</small></span>
+                </label>
+              )}
+              {cuadrilla.personas.map(p => (
+                <label className="check-row" key={p.dni}>
+                  <input type="checkbox" checked={!!checkPer[p.dni]} onChange={e=>setCheckPer(s=>({...s,[p.dni]:e.target.checked}))} />
+                  <span className="cl"><b>{p.nombre} {p.apellido}</b> <small>DNI {p.dni}{p.empresa?" · "+p.empresa:""}</small></span>
+                </label>
+              ))}
+              {cuadrilla.personas.length===0 && <div className="sin-personas">Sin personas en esta cuadrilla.</div>}
+            </div>
+            <div className="modal-foot">
+              <div className="ubic">
+                <label>Ubicación (a mano)</label>
+                <input autoFocus value={ubic} onChange={e=>setUbic(e.target.value)} placeholder="Ej: Senda 1" />
+              </div>
+              <div className="acciones">
+                <button className="btn btn-ghost" onClick={onCerrar}>Cancelar</button>
+                <button className="btn btn-primary" disabled={!ubic.trim() || nada || enviando} onClick={guardar}>
+                  {enviando ? "Guardando…" : "Guardar registro"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===================== MODAL: carga a mano (no está en la base) =====================
+    function ManualModal({ tipo, valor, onCerrar, onAgregar }){
+      const esVeh = tipo === "vehiculo";
+      const [patente, setPatente] = useState(esVeh ? valor : "");
+      const [descripcion, setDescripcion] = useState("");
+      const [dni, setDni] = useState(esVeh ? "" : valor);
+      const [nombre, setNombre] = useState("");
+      const [apellido, setApellido] = useState("");
+      const [empresa, setEmpresa] = useState("");
+      const valido = esVeh ? !!patente.trim() : (!!dni.trim() && !!nombre.trim());
+      function agregar(){
+        if (!valido) return;
+        if (esVeh) onAgregar({ patente:patente.trim().toUpperCase(), tipo:"Otro", descripcion:descripcion.trim(), empresa:empresa.trim() });
+        else onAgregar({ dni:dni.trim(), nombre:nombre.trim(), apellido:apellido.trim(), empresa:empresa.trim() });
+      }
+      const campo = (lbl, val, set, ph, foco) => (
+        <div style={{marginBottom:10}}><label>{lbl}</label><input autoFocus={foco} value={val} onChange={e=>set(e.target.value)} placeholder={ph}/></div>
+      );
+      return (
+        <div className="modal-bg" onClick={onCerrar}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-head">
+              <h3>{esVeh ? "Vehículo no encontrado" : "Persona no encontrada"}</h3>
+              <p>No está en la base de ControlObra. Cargalo a mano para este registro.</p>
+            </div>
+            <div className="modal-body" style={{padding:"14px 16px"}}>
+              {esVeh ? (<>
+                {campo("Patente", patente, setPatente, "AB123CD", false)}
+                {campo("Marca y modelo", descripcion, setDescripcion, "Ej: Toyota Hilux", true)}
+                {campo("Empresa", empresa, setEmpresa, "Empresa (opcional)", false)}
+              </>) : (<>
+                {campo("DNI", dni, setDni, "DNI", false)}
+                {campo("Nombre", nombre, setNombre, "Nombre", true)}
+                {campo("Apellido", apellido, setApellido, "Apellido", false)}
+                {campo("Empresa", empresa, setEmpresa, "Empresa (opcional)", false)}
+              </>)}
+            </div>
+            <div className="modal-foot">
+              <div className="acciones">
+                <button className="btn btn-ghost" onClick={onCerrar}>Cancelar</button>
+                <button className="btn btn-primary" disabled={!valido} onClick={agregar}>Agregar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===================== OPERARIO (registro + transmisión) =====================
+    function Operario({ go }){
+      const [fase, setFase] = useState("setup");        // setup | operando
+      const [fecha, setFecha] = useState(hoyTexto());
+      const [cuadrillas, setCuadrillas] = useState([]); // [{key,tipo,patente,descripcion,empresa,sinVehiculo,personas:[{dni,nombre,apellido,empresa}]}]
+      const [activeKey, setActiveKey] = useState(null);
+      const [scan, setScan] = useState("");
+      const [toast, setToast] = useState(null);
+      const [grabarKey, setGrabarKey] = useState(null);
+      const [buscando, setBuscando] = useState(false);
+      const [manual, setManual] = useState(null);   // { tipo:'vehiculo'|'persona', valor }
+      // GPS
+      const [pos, setPos] = useState(null);
+      const [stale, setStale] = useState(false);
+      const watchRef = useRef(null), wakeRef = useRef(null), posRef = useRef(null), lastSent = useRef(0);
+      const unitId = useRef(getUnitId());
+      const scanRef = useRef(null);
+
+      const aviso = (tipo, texto) => setToast({ tipo, texto, id: Math.random() });
+      useEffect(() => { if(!toast) return; const t=setTimeout(()=>setToast(null), 2600); return ()=>clearTimeout(t); }, [toast]);
+      const foco = () => { if (scanRef.current) scanRef.current.focus(); };
+
+      // ---- lookups en ControlObra ----
+      async function buscarVehiculo(pat){
+        const { data } = await sbObra.from("vehiculos").select("patente,tipo,descripcion,empresa").eq("patente", pat).limit(1);
+        return (data && data[0]) || null;
+      }
+      async function buscarPersona(dni){
+        const { data } = await sbObra.from("personas").select("dni,nombre,apellido,empresa").eq("dni", dni).is("deleted_at", null).limit(1);
+        return (data && data[0]) || null;
+      }
+
+      function agregarVehiculo(v){
+        setCuadrillas(prev => {
+          if (prev.some(c => c.key === v.patente)) return prev;
+          return [...prev, { key:v.patente, tipo:v.tipo, patente:v.patente, descripcion:v.descripcion||"", empresa:v.empresa||"", sinVehiculo:false, personas:[] }];
+        });
+        setActiveKey(v.patente);
+        aviso("ok", "Vehículo: " + v.patente + (v.descripcion?" · "+v.descripcion:""));
+      }
+      function agregarPersona(p){
+        setCuadrillas(prev => {
+          let arr = prev.slice();
+          let key = activeKey;
+          if (!key || !arr.some(c=>c.key===key)) {
+            // sin vehículo activo → cuadrilla "A pie"
+            key = "__apie__";
+            if (!arr.some(c=>c.key===key)) arr.push({ key, tipo:"apie", patente:"", descripcion:"A pie", empresa:"", sinVehiculo:true, personas:[] });
+          }
+          arr = arr.map(c => {
+            if (c.key !== key) return c;
+            if (c.personas.some(x=>x.dni===p.dni)) return c; // ya está
+            return { ...c, personas:[...c.personas, { dni:p.dni, nombre:p.nombre, apellido:p.apellido, empresa:p.empresa||"" }] };
+          });
+          if (key === "__apie__") setActiveKey(key);
+          return arr;
+        });
+        aviso("ok", "Persona: " + p.nombre + " " + p.apellido);
+      }
+
+      async function procesar(valor){
+        const v = (valor||"").trim();
+        if (!v) return;
+        setBuscando(true);
+        try {
+          if (/^[0-9.\-\s]+$/.test(v)) {           // DNI (números)
+            const dni = v.replace(/\D/g,"");
+            if (dni.length < 6) { aviso("err","DNI inválido: "+v); return; }
+            const p = await buscarPersona(dni);
+            if (!p) { setManual({ tipo:"persona", valor:dni }); return; }
+            agregarPersona(p);
+          } else {                                  // patente (alfanumérico)
+            const pat = v.toUpperCase().replace(/[^A-Z0-9]/g,"");
+            const ve = await buscarVehiculo(pat);
+            if (!ve) { setManual({ tipo:"vehiculo", valor:pat }); return; }
+            agregarVehiculo(ve);
+          }
+        } catch(e) { aviso("err","Error de búsqueda: "+e.message); }
+        finally { setBuscando(false); setScan(""); setTimeout(foco, 30); }
+      }
+
+      const quitarCuadrilla = (key) => setCuadrillas(prev => prev.filter(c=>c.key!==key));
+      const quitarPersona = (key, dni) => setCuadrillas(prev => prev.map(c => c.key===key ? {...c, personas:c.personas.filter(p=>p.dni!==dni)} : c));
+      function agregarManual(obj){
+        if (!manual) return;
+        if (manual.tipo === "vehiculo") agregarVehiculo(obj); else agregarPersona(obj);
+        setManual(null); setTimeout(foco, 30);
+      }
+      const cerrarManual = () => { setManual(null); setTimeout(foco, 30); };
+
+      // ---- GPS ----
+      async function pedirWakeLock(){ try{ if("wakeLock" in navigator) wakeRef.current = await navigator.wakeLock.request("screen"); }catch(e){} }
       useEffect(() => {
-        const re = () => { if (activo && document.visibilityState === "visible") pedirWakeLock(); };
+        const re = () => { if (fase==="operando" && document.visibilityState==="visible") pedirWakeLock(); };
         document.addEventListener("visibilitychange", re);
         return () => document.removeEventListener("visibilitychange", re);
-      }, [activo]);
+      }, [fase]);
 
-      async function enviar(p){
-        const veh = limpios();
-        const fila = {
-          unit_id: unitId.current,
-          referencia: referencia.trim() || "Recorrida",
-          tipo: (veh[0] || {}).tipo || "otro",
-          vehiculos: JSON.stringify(veh),
-          personas: JSON.stringify(veh.flatMap(v => v.personas)),
-          lat:p.coords.latitude, lng:p.coords.longitude,
-          rumbo:p.coords.heading, velocidad:p.coords.speed, exactitud:p.coords.accuracy,
-          actualizado:new Date().toISOString(), activo:true,
-        };
-        const { error } = await sb.from("posiciones").upsert(fila, { onConflict:"unit_id" });
-        setError(error ? "Sin conexión con el servidor (revisá la configuración de Supabase)." : "");
+      function mapVeh(){
+        return cuadrillas.map(c => ({
+          tipo: TIPO_PIN[c.tipo] || c.tipo || "otro",
+          nombre: c.sinVehiculo ? "A pie" : (c.patente + (c.descripcion?" "+c.descripcion:"")),
+          personas: c.personas.map(p => (p.nombre+" "+p.apellido).trim()),
+        }));
       }
-
-      function iniciar(){
-        if (!navigator.geolocation) { setError("Este dispositivo no tiene GPS disponible."); return; }
-        localStorage.setItem("visita_cfg", JSON.stringify({ referencia, vehiculos }));
-        setActivo(true); pedirWakeLock();
+      async function transmitir(p){
+        const veh = mapVeh();
+        const fila = {
+          unit_id: unitId.current, referencia: "Registro " + fecha,
+          tipo: (veh[0]||{}).tipo || "otro",
+          vehiculos: JSON.stringify(veh), personas: JSON.stringify(veh.flatMap(v=>v.personas)),
+          lat:p.coords.latitude, lng:p.coords.longitude, rumbo:p.coords.heading, velocidad:p.coords.speed,
+          exactitud:p.coords.accuracy, actualizado:new Date().toISOString(), activo:true,
+        };
+        await sb.from("posiciones").upsert(fila, { onConflict:"unit_id" });
+      }
+      function iniciarOperacion(){
+        if (!navigator.geolocation) { aviso("err","Este dispositivo no tiene GPS."); return; }
+        setFase("operando"); pedirWakeLock();
         watchRef.current = navigator.geolocation.watchPosition(
-          (p) => {
-            setPos(p); posRef.current = p; setStale(false);
-            const ahora = Date.now();
-            if (ahora - lastSent.current >= INTERVALO_SEG*1000) { lastSent.current = ahora; enviar(p); }
-          },
-          (e) => setError("GPS: " + e.message),
+          (p) => { setPos(p); posRef.current=p; setStale(false); const a=Date.now(); if(a-lastSent.current>=INTERVALO_SEG*1000){ lastSent.current=a; transmitir(p); } },
+          (e) => aviso("err","GPS: "+e.message),
           { enableHighAccuracy:true, maximumAge:2000, timeout:15000 }
         );
       }
-      async function detener(){
-        if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current);
-        try { if (wakeRef.current) await wakeRef.current.release(); } catch(e){}
+      async function finalizar(){
+        if (watchRef.current!=null) navigator.geolocation.clearWatch(watchRef.current);
+        try{ if(wakeRef.current) await wakeRef.current.release(); }catch(e){}
         await sb.from("posiciones").update({ activo:false, actualizado:new Date().toISOString() }).eq("unit_id", unitId.current);
-        setActivo(false); setPos(null);
+        setFase("setup"); setPos(null);
+      }
+      useEffect(() => { if(fase!=="operando") return; const t=setInterval(()=>{ if(pos && Date.now()-pos.timestamp>OFFLINE_SEG*1000) setStale(true); },5000); return ()=>clearInterval(t); }, [fase,pos]);
+      // re-transmite al cambiar las cuadrillas
+      useEffect(() => { if(fase!=="operando") return; const t=setTimeout(()=>{ if(posRef.current) transmitir(posRef.current); },400); return ()=>clearTimeout(t); }, [cuadrillas, fase]);
+
+      async function guardarUbicacion(filas){
+        try {
+          await fetch(WEB_APP_URL, { method:"POST", mode:"no-cors", body: JSON.stringify({ filas }) });
+          aviso("ok", filas.length + " registro(s) guardado(s) en la planilla");
+        } catch(e) { aviso("err","No se pudo guardar: " + e.message); }
+        setGrabarKey(null);
       }
 
-      // marca "sin señal"
-      useEffect(() => {
-        if (!activo) return;
-        const t = setInterval(() => { if (pos && Date.now() - pos.timestamp > OFFLINE_SEG*1000) setStale(true); }, 5000);
-        return () => clearInterval(t);
-      }, [activo, pos]);
+      // ---------- render: caja de escaneo (función, no componente) ----------
+      const cajaScan = () => (
+        <div className="scan">
+          <input ref={scanRef} value={scan} autoFocus
+            onChange={e=>setScan(e.target.value)}
+            onKeyDown={e=>{ if(e.key==="Enter"){ e.preventDefault(); procesar(scan); } }}
+            placeholder="Escaneá patente o DNI (o escribí y Enter)" />
+          <button className="icon-btn" title="Buscar" onClick={()=>procesar(scan)}>{buscando ? "…" : Ico.lupa}</button>
+        </div>
+      );
 
-      // re-envía al cambiar la composición del grupo durante la transmisión
-      useEffect(() => {
-        if (!activo) return;
-        const t = setTimeout(() => { if (posRef.current) enviar(posRef.current); }, 400);
-        return () => clearTimeout(t);
-      }, [vehiculos, activo]);
+      // ---------- render: una cuadrilla (función, no componente) ----------
+      const cuadCard = (c, conGrabar) => (
+        <div className={"cuad" + (c.key===activeKey ? " activa" : "")} key={c.key}>
+          <div className="cuad-head" onClick={()=>setActiveKey(c.key)}>
+            {c.sinVehiculo
+              ? <span className="pat">A pie</span>
+              : <><span className="pat">{c.patente}</span><span className="desc">{c.descripcion}</span><span className="tag">{c.tipo}</span></>}
+            {c.key===activeKey && <span className="activa-tag">Activa</span>}
+            <button className="icon-btn danger" title="Quitar cuadrilla" onClick={(e)=>{e.stopPropagation(); quitarCuadrilla(c.key);}}>{Ico.cerrar}</button>
+          </div>
+          <div className="cuad-body">
+            {c.personas.map(p => (
+              <div className="persona" key={p.dni}>
+                <span className="pdni">{p.dni}</span>
+                <span><span className="pnom">{p.nombre} {p.apellido}</span>{p.empresa && <span className="pemp"> · {p.empresa}</span>}</span>
+                <button className="icon-btn danger" title="Quitar persona" onClick={()=>quitarPersona(c.key, p.dni)}>{Ico.cerrar}</button>
+              </div>
+            ))}
+            {c.personas.length===0 && <div className="sin-personas">Sin personas. Escaneá un DNI con esta cuadrilla activa.</div>}
+            {conGrabar && <button className="grabar" onClick={()=>setGrabarKey(c.key)}>{Ico.pin} Grabar ubicación</button>}
+          </div>
+        </div>
+      );
 
-      // ---- transmitiendo: pantalla dividida (mapa + editor del grupo) ----
-      if (activo) {
-        localStorage.setItem("visita_cfg", JSON.stringify({ referencia, vehiculos }));
+      // ===== SETUP =====
+      if (fase === "setup") {
         return (
           <div className="pantalla">
             <div className="topbar">
-              <span className={"estado" + (stale ? " warn" : "")}>
-                <span className="dot"></span>
-                {stale ? "Buscando señal" : "Transmitiendo"}
-                <span className="ref">· {referencia || "Recorrida"}</span>
-              </span>
-              <div className="right">
-                <button className="btn-danger-ghost" onClick={detener}>Finalizar</button>
+              <button className="tb-btn tb-icon" onClick={()=>go("view")}>{Ico.volver}</button>
+              <div><div className="titulo">Iniciar registro de visita</div><div className="sub">Escaneá vehículos y personas</div></div>
+            </div>
+            <div className="op-body">
+              <div className="op-inner">
+                <div className="card">
+                  <label>Fecha de la visita</label>
+                  <input type="date" value={fecha} onChange={e=>setFecha(e.target.value)} />
+                </div>
+                <div className="card">
+                  <h3>Escanear</h3>
+                  {cajaScan()}
+                  <div className="hint">Patente → crea/activa un vehículo · DNI → suma la persona a la cuadrilla activa.</div>
+                </div>
+                <div className="card">
+                  <h3>Cuadrillas ({cuadrillas.length})</h3>
+                  {cuadrillas.length===0 && <div className="sin-personas">Todavía no cargaste nada. Empezá escaneando una patente.</div>}
+                  {cuadrillas.map(c => cuadCard(c, false))}
+                </div>
+                <button className="btn btn-primary" disabled={cuadrillas.length===0} onClick={iniciarOperacion}>Iniciar registro y transmisión</button>
               </div>
             </div>
-            <div className="split-map">
-              <MapaVivo/>
-              {pos && (
-                <div className="chip">
-                  <span className="c">{pos.coords.latitude.toFixed(5)}, {pos.coords.longitude.toFixed(5)}</span>{" "}
-                  <span className="e">· ±{Math.round(pos.coords.accuracy)} m</span>
-                </div>
-              )}
-              {!editorAbierto && (
-                <button className="fab" onClick={()=>setEditorAbierto(true)}>{Ico.gestionar} Gestionar grupo</button>
-              )}
-              {editorAbierto && (
-                <div className="sheet">
-                  <div className="sheet-head">
-                    <span className="t">Grupo en ruta · mové o quitá personas</span>
-                    <button className="icon-btn" title="Cerrar" onClick={()=>setEditorAbierto(false)}>{Ico.bajar}</button>
-                  </div>
-                  <div className="sheet-body">
-                    <EditorVehiculos vehiculos={vehiculos} h={h} mover={true} />
-                  </div>
-                </div>
-              )}
-            </div>
-            {error && <div style={{background:"#fef2f2",color:"var(--danger)",fontSize:13,padding:"8px 14px",borderTop:"1px solid #fecaca"}}>{error}</div>}
+            {manual && <ManualModal tipo={manual.tipo} valor={manual.valor} onCerrar={cerrarManual} onAgregar={agregarManual} />}
+            {toast && <div className={"toast "+toast.tipo}>{toast.texto}</div>}
           </div>
         );
       }
 
-      // ---- formulario de carga inicial ----
-      const puedeIniciar = limpios().length > 0;
+      // ===== OPERANDO (pantalla partida) =====
+      const cuadrillaGrabar = cuadrillas.find(c => c.key === grabarKey);
       return (
         <div className="pantalla">
           <div className="topbar">
-            <button className="tb-btn tb-icon" onClick={()=>go("view")}>{Ico.volver}</button>
-            <div>
-              <div className="titulo">Cargar grupo de visita</div>
-              <div className="sub">Vehículos y quién va en cada uno</div>
+            <span className={"estado"+(stale?" warn":"")}><span className="dot"></span>{stale?"Buscando señal":"Transmitiendo"}<span className="ref">· {fecha}</span></span>
+            <div className="right"><button className="btn-danger-ghost" onClick={finalizar}>Finalizar</button></div>
+          </div>
+          <div className="op-split">
+            <div className="op-left">
+              <div className="barra">{cajaScan()}</div>
+              <div className="lista">
+                {cuadrillas.map(c => cuadCard(c, true))}
+                {cuadrillas.length===0 && <div className="sin-personas">Escaneá una patente para empezar.</div>}
+              </div>
+            </div>
+            <div className="op-right">
+              <MapaVivo/>
+              {pos && <div className="chip"><span className="c">{pos.coords.latitude.toFixed(5)}, {pos.coords.longitude.toFixed(5)}</span> <span className="e">· ±{Math.round(pos.coords.accuracy)} m</span></div>}
             </div>
           </div>
-          <div className="scroll">
-            <div className="form">
-              <div className="card">
-                <label>Referencia de la visita (opcional)</label>
-                <input value={referencia} onChange={e=>setReferencia(e.target.value)} placeholder="Ej: Visita semanal · Chalet 4" />
-              </div>
-              <div className="card">
-                <h3>Vehículos del grupo</h3>
-                <EditorVehiculos vehiculos={vehiculos} h={h} mover={false} />
-              </div>
-              {error && <p className="err">{error}</p>}
-              <button className="btn btn-primary" disabled={!puedeIniciar} onClick={iniciar}>Iniciar transmisión</button>
-            </div>
-          </div>
+          {cuadrillaGrabar && <GrabarModal cuadrilla={cuadrillaGrabar} onCerrar={()=>setGrabarKey(null)} onGuardar={guardarUbicacion} />}
+          {manual && <ManualModal tipo={manual.tipo} valor={manual.valor} onCerrar={cerrarManual} onAgregar={agregarManual} />}
+          {toast && <div className={"toast "+toast.tipo}>{toast.texto}</div>}
         </div>
       );
     }
@@ -509,8 +657,9 @@
     // ===================== APP =====================
     function App(){
       const rol = new URLSearchParams(location.search).get("rol");
-      const [mode, setMode] = useState(rol === "recorrida" ? "track" : "view");
-      if (mode === "track") return <Tracker go={setMode} />;
+      const esOper = rol === "operario" || rol === "recorrida";
+      const [mode, setMode] = useState(esOper ? "operario" : "view");
+      if (mode === "operario") return <Operario go={setMode} />;
       return <Visor go={setMode} />;
     }
     ReactDOM.createRoot(document.getElementById("root")).render(<App />);
