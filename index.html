@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Rastreo de personal — veda</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root{
+      --tinta:#1e293b; --tinta2:#334155; --bg:#f1f5f9; --linea:#e2e8f0;
+      --acento:#2563eb; --acento-d:#1d4ed8; --muted:#64748b;
+      --ok:#15803d; --warn:#b45309; --danger:#b91c1c;
+    }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body,#root{ height:100%; margin:0; }
+    body{ font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; color:var(--tinta); background:var(--bg); }
+    button,input,select{ font:inherit; color:inherit; }
+    button{ cursor:pointer; }
+    svg{ display:block; }
+    .pantalla{ height:100%; display:flex; flex-direction:column; }
+
+    /* Barra superior */
+    .topbar{ background:var(--tinta); color:#fff; padding:0 14px; min-height:56px; display:flex; align-items:center; gap:12px; flex:none; }
+    .topbar .titulo{ font-size:15px; font-weight:600; letter-spacing:.2px; }
+    .topbar .sub{ font-size:12px; color:#94a3b8; margin-top:1px; }
+    .topbar .right{ margin-left:auto; display:flex; align-items:center; gap:12px; }
+    .topbar .count{ font-size:12.5px; color:#cbd5e1; }
+    .tb-btn{ display:inline-flex; align-items:center; gap:7px; height:36px; padding:0 12px; border-radius:8px; border:1px solid #475569; background:transparent; color:#e2e8f0; font-size:13.5px; font-weight:600; }
+    .tb-btn:hover{ background:#334155; }
+    .tb-icon{ width:36px; height:36px; padding:0; justify-content:center; border-color:transparent; }
+
+    .estado{ display:inline-flex; align-items:center; gap:8px; font-size:14px; font-weight:600; }
+    .estado .dot{ width:9px; height:9px; border-radius:50%; background:#22c55e; animation:pulse 1.6s infinite; }
+    .estado.warn .dot{ background:#f59e0b; }
+    @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)} 70%{box-shadow:0 0 0 9px rgba(34,197,94,0)} 100%{box-shadow:0 0 0 0 rgba(34,197,94,0)} }
+    .estado .ref{ color:#94a3b8; font-weight:500; }
+
+    /* Formulario / editor */
+    .scroll{ overflow-y:auto; flex:1; }
+    .form{ padding:18px; max-width:560px; margin:0 auto; width:100%; }
+    .card{ background:#fff; border:1px solid var(--linea); border-radius:12px; padding:18px; margin-bottom:14px; }
+    .card>h3{ margin:0 0 14px; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); }
+    label{ display:block; font-size:12.5px; font-weight:600; color:var(--tinta2); margin:0 0 6px; }
+    input,select{ width:100%; padding:11px 12px; border:1px solid #cbd5e1; border-radius:9px; background:#fff; }
+    input::placeholder{ color:#94a3b8; }
+    input:focus,select:focus{ outline:none; border-color:var(--acento); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+
+    .veh{ border:1px solid var(--linea); border-radius:11px; padding:14px; margin-bottom:12px; background:#fbfcfe; }
+    .veh-head{ display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+    .veh-head select{ flex:none; width:150px; }
+    .veh-head input{ flex:1; }
+    .icon-btn{ flex:none; width:38px; height:38px; display:flex; align-items:center; justify-content:center; border:1px solid #cbd5e1; background:#fff; color:var(--muted); border-radius:9px; }
+    .icon-btn:hover{ border-color:#94a3b8; color:var(--tinta); }
+    .icon-btn.danger:hover{ border-color:#fca5a5; color:var(--danger); background:#fef2f2; }
+    .abordo{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#94a3b8; margin:2px 0 9px; }
+    .per{ display:flex; gap:6px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+    .per input{ flex:1; min-width:120px; }
+    .per .mover{ flex:none; width:130px; padding:8px 9px; font-size:12.5px; color:var(--acento); border-color:#cdd9ee; }
+    .per .icon-btn{ width:36px; height:36px; }
+    .link-add{ display:inline-flex; align-items:center; gap:6px; padding:7px 2px; background:none; border:none; color:var(--acento); font-weight:600; font-size:13.5px; }
+    .link-add:hover{ color:var(--acento-d); }
+    .add-veh{ width:100%; display:flex; align-items:center; justify-content:center; gap:7px; padding:11px; border:1px dashed #b6c2d4; background:#fff; color:var(--acento); border-radius:10px; font-weight:600; }
+    .add-veh:hover{ background:#f8faff; border-color:var(--acento); }
+    .empty{ color:#94a3b8; font-size:13px; padding:6px 0; }
+
+    .btn{ width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px; border:1px solid transparent; border-radius:10px; font-size:15px; font-weight:600; }
+    .btn-primary{ background:var(--acento); color:#fff; }
+    .btn-primary:hover{ background:var(--acento-d); }
+    .btn-primary:disabled{ background:#94a3b8; cursor:default; }
+    .btn-danger-ghost{ height:36px; width:auto; padding:0 14px; border:1px solid #fca5a5; background:#fff; color:var(--danger); border-radius:8px; font-size:13.5px; }
+    .btn-danger-ghost:hover{ background:#fef2f2; }
+    .err{ color:var(--danger); font-size:13px; margin:12px 0 0; }
+
+    /* Mapa */
+    #map{ width:100%; height:100%; }
+    .maparea{ position:relative; flex:1; }
+    .panel{ position:absolute; left:12px; bottom:12px; z-index:1000; background:#fff; border:1px solid var(--linea); border-radius:11px; box-shadow:0 8px 24px rgba(15,23,42,.14); max-width:300px; max-height:56%; overflow:auto; }
+    .panel .ph{ padding:11px 14px; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); background:#f8fafc; border-bottom:1px solid var(--linea); position:sticky; top:0; }
+    .panel .item{ padding:12px 14px; border-top:1px solid #f1f5f9; }
+    .panel .item:first-of-type{ border-top:none; }
+    .item .top{ display:flex; gap:9px; align-items:center; }
+    .item .sdot{ width:9px; height:9px; border-radius:50%; flex:none; }
+    .item .n{ font-weight:700; font-size:14px; }
+    .item .v{ font-size:13px; margin:8px 0 0 0; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+    .item .v .gente{ color:var(--muted); font-size:12.5px; width:100%; padding-left:2px; }
+    .item .meta{ font-size:12px; color:var(--muted); margin-top:9px; }
+    .tag{ display:inline-block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#475569; background:#eef2f7; border:1px solid #e2e8f0; padding:2px 7px; border-radius:5px; }
+
+    .chip{ position:absolute; right:12px; bottom:12px; z-index:1000; background:#fff; border:1px solid var(--linea); border-radius:10px; box-shadow:0 6px 18px rgba(15,23,42,.12); padding:9px 13px; font-size:12.5px; }
+    .chip .c{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--tinta2); }
+    .chip .e{ color:var(--muted); }
+
+    .vacio{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:500; pointer-events:none; }
+    .vacio span{ background:#fff; border:1px solid var(--linea); padding:12px 18px; border-radius:11px; box-shadow:0 6px 18px rgba(15,23,42,.1); color:var(--muted); font-size:14px; }
+
+    /* Pantalla dividida (transmisión) */
+    .split{ flex:1; display:flex; min-height:0; }
+    .split-map{ position:relative; display:flex; flex:1; min-width:0; min-height:0; }
+    .split-edit{ width:370px; flex:none; background:#fff; border-left:1px solid var(--linea); overflow-y:auto; }
+    .split-edit .edit-head{ padding:12px 14px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); background:#f8fafc; border-bottom:1px solid var(--linea); position:sticky; top:0; z-index:2; }
+    .split-edit .wrap{ padding:14px; }
+    @media (max-width:760px){
+      .split{ flex-direction:column; }
+      .split-map{ flex:1; }
+      .split-edit{ width:auto; height:48%; border-left:none; border-top:1px solid var(--linea); }
+    }
+
+    .leaflet-div-icon{ background:transparent; border:none; }
+    .marker{ text-align:center; line-height:1; }
+    .marker .lbl{ font-size:11px; font-weight:600; background:var(--tinta); color:#fff; padding:2px 7px; border-radius:6px; white-space:nowrap; display:inline-block; margin-top:-3px; box-shadow:0 1px 3px rgba(0,0,0,.3); }
+    .leaflet-popup-content{ font-size:13px; line-height:1.5; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useRef } = React;
+
+    // ===================== CONFIGURACIÓN =====================
+    const SUPABASE_URL  = "https://zcbqtpzwmnyjoafzkssw.supabase.co";   // Supabase → Settings → API
+    const SUPABASE_ANON = "sb_publishable_AkXrqIK_Yhk2rUfEDlfuHA_-vTiwfbo";
+    const CENTRO = [-41.133, -71.31];   // centro inicial del mapa (zona de obra)
+    const ZOOM   = 12;
+    const INTERVALO_SEG = 4;            // mínimo entre envíos por movimiento
+    const OFFLINE_SEG   = 30;           // sin señal después de N seg sin actualizar
+    // ========================================================
+
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    const TIPOS = [
+      { id:"camioneta",   nombre:"Camioneta" },
+      { id:"utv",         nombre:"UTV" },
+      { id:"cuatriciclo", nombre:"Cuatriciclo" },
+      { id:"apie",        nombre:"A pie" },
+      { id:"otro",        nombre:"Otro" },
+    ];
+    const tipoNombre = (t) => (TIPOS.find(x=>x.id===t)||{}).nombre || "Unidad";
+    const parseJSON  = (s, def) => { try { return JSON.parse(s) || def; } catch(e){ return def; } };
+    // siempre devuelve un arreglo de vehículos, aunque el dato venga raro (no rompe el visor)
+    const asVeh = (s) => { const v = parseJSON(s, []); return Array.isArray(v) ? v : (v ? [v] : []); };
+
+    function getUnitId(){
+      let id = localStorage.getItem("unit_id");
+      if (!id) { id = "u_" + Math.random().toString(36).slice(2,10); localStorage.setItem("unit_id", id); }
+      return id;
+    }
+
+    const Ico = {
+      volver: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
+      mas:    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+      cerrar: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+      señal:  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>,
+    };
+
+    function pinHTML(off, label){
+      const color = off ? "#94a3b8" : "#2563eb";
+      return `<div class="marker">
+        <svg width="30" height="40" viewBox="0 0 28 38" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 0C6.27 0 0 6.05 0 13.5 0 23.6 14 38 14 38s14-14.4 14-24.5C28 6.05 21.73 0 14 0z" fill="${color}" stroke="#ffffff" stroke-width="1.5"/>
+          <circle cx="14" cy="13.5" r="5" fill="#ffffff"/>
+        </svg>
+        <div class="lbl">${label}</div>
+      </div>`;
+    }
+
+    // ===================== EDITOR DE VEHÍCULOS (reusable) =====================
+    // h = { setVeh, delVeh, addVeh, setPer, addPer, delPer, movePer }
+    function EditorVehiculos({ vehiculos, h, mover }){
+      return (
+        <>
+          {vehiculos.map((v,i)=>(
+            <div className="veh" key={i}>
+              <div className="veh-head">
+                <select value={v.tipo} onChange={e=>h.setVeh(i,"tipo",e.target.value)}>
+                  {TIPOS.map(t=><option key={t.id} value={t.id}>{t.nombre}</option>)}
+                </select>
+                <input value={v.nombre} onChange={e=>h.setVeh(i,"nombre",e.target.value)} placeholder="Identificación / patente" />
+                <button className="icon-btn danger" title="Quitar vehículo" onClick={()=>h.delVeh(i)}>{Ico.cerrar}</button>
+              </div>
+              <div className="abordo">A bordo</div>
+              {v.personas.map((p,pi)=>(
+                <div className="per" key={pi}>
+                  <input value={p} onChange={e=>h.setPer(i,pi,e.target.value)} placeholder="Nombre y apellido" />
+                  {mover && vehiculos.length>1 && (
+                    <select className="mover" value="" onChange={e=>{ if(e.target.value!=="") h.movePer(i,pi,Number(e.target.value)); }}>
+                      <option value="">Mover a…</option>
+                      {vehiculos.map((vv,j)=> j!==i ? <option key={j} value={j}>{vv.nombre||tipoNombre(vv.tipo)}</option> : null)}
+                    </select>
+                  )}
+                  <button className="icon-btn danger" title="Quitar persona" onClick={()=>h.delPer(i,pi)}>{Ico.cerrar}</button>
+                </div>
+              ))}
+              {v.personas.length===0 && <div className="empty">Sin personas</div>}
+              <button className="link-add" onClick={()=>h.addPer(i)}>{Ico.mas} Agregar persona</button>
+            </div>
+          ))}
+          {vehiculos.length===0 && <div className="empty">Sin vehículos</div>}
+          <button className="add-veh" onClick={h.addVeh}>{Ico.mas} Agregar vehículo</button>
+        </>
+      );
+    }
+
+    // ===================== MAPA EN VIVO (compartido) =====================
+    function MapaVivo(){
+      const [units, setUnits] = useState({});
+      const [tick, setTick]   = useState(0);
+      const mapRef = useRef(null);
+      const markers = useRef({});
+      const fitDone = useRef(false);
+
+      useEffect(() => {
+        const map = L.map("map", { zoomControl:true }).setView(CENTRO, ZOOM);
+        const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom:19, attribution:"© OpenStreetMap" });
+        const sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom:19, attribution:"© Esri" });
+        osm.addTo(map);
+        L.control.layers({ "Mapa":osm, "Satélite":sat }).addTo(map);
+        mapRef.current = map;
+        setTimeout(() => map.invalidateSize(), 200);
+        return () => map.remove();
+      }, []);
+
+      useEffect(() => {
+        let cancel = false;
+        const refetch = async () => {
+          const { data } = await sb.from("posiciones").select("*");
+          if (cancel || !data) return;
+          const m = {}; data.forEach(f => m[f.unit_id] = f); setUnits(m);
+        };
+        refetch();
+        const ch = sb.channel("pos")
+          .on("postgres_changes", { event:"*", schema:"public", table:"posiciones" }, (payload) => {
+            setUnits(prev => {
+              const next = { ...prev };
+              if (payload.eventType === "DELETE") delete next[payload.old.unit_id];
+              else next[payload.new.unit_id] = payload.new;
+              return next;
+            });
+          }).subscribe();
+        // refresco de respaldo cada 5 s (por si Realtime se corta) + recálculo de "sin señal"
+        const t = setInterval(() => { refetch(); setTick(x=>x+1); }, 5000);
+        return () => { cancel=true; sb.removeChannel(ch); clearInterval(t); };
+      }, []);
+
+      const esViejo = (f) => (Date.now() - new Date(f.actualizado).getTime()) > OFFLINE_SEG*1000;
+
+      useEffect(() => {
+        const map = mapRef.current; if (!map) return;
+        const vivos = Object.values(units).filter(f => f.activo);
+        const ids = new Set(vivos.map(f => f.unit_id));
+        Object.keys(markers.current).forEach(id => {
+          if (!ids.has(id)) { map.removeLayer(markers.current[id]); delete markers.current[id]; }
+        });
+        vivos.forEach(f => {
+          const off = esViejo(f);
+          const veh = asVeh(f.vehiculos);
+          const icon = L.divIcon({ html:pinHTML(off, (f.referencia||"Recorrida").slice(0,22)), iconSize:[110,52], iconAnchor:[55,40], className:"" });
+          const cuerpo = veh.map(v =>
+            `<div><b>${v.nombre||tipoNombre(v.tipo)}</b> <span style="font-size:11px;color:#64748b">(${tipoNombre(v.tipo)})</span>` +
+            (v.personas&&v.personas.length ? `<br><span style="color:#64748b">${v.personas.join(", ")}</span>` : "") + `</div>`
+          ).join("");
+          const popup = `<b>${f.referencia||"Recorrida"}</b><br>${cuerpo}`;
+          if (markers.current[f.unit_id]) {
+            markers.current[f.unit_id].setLatLng([f.lat,f.lng]).setIcon(icon).setPopupContent(popup);
+          } else {
+            markers.current[f.unit_id] = L.marker([f.lat,f.lng], { icon }).addTo(map).bindPopup(popup);
+          }
+        });
+        if (!fitDone.current && vivos.length) {
+          fitDone.current = true;
+          map.fitBounds(L.latLngBounds(vivos.map(f => [f.lat,f.lng])).pad(0.3));
+        }
+      }, [units, tick]);
+
+      const lista = Object.values(units).filter(f => f.activo);
+      return (
+        <div className="maparea">
+          <div id="map"></div>
+          {lista.length === 0 && <div className="vacio"><span>No hay ninguna recorrida transmitiendo en este momento.</span></div>}
+          {lista.length > 0 && (
+            <div className="panel">
+              <div className="ph">Grupos en ruta</div>
+              {lista.map(f => {
+                const off = esViejo(f);
+                const veh = asVeh(f.vehiculos);
+                return (
+                  <div key={f.unit_id} className="item">
+                    <div className="top">
+                      <span className="sdot" style={{background: off ? "#94a3b8" : "var(--ok)"}}></span>
+                      <span className="n">{f.referencia||"Recorrida"}</span>
+                    </div>
+                    {veh.map((v,i)=>(
+                      <div className="v" key={i}>
+                        <span className="tag">{tipoNombre(v.tipo)}</span>
+                        <span>{v.nombre || tipoNombre(v.tipo)}</span>
+                        {v.personas && v.personas.length>0 && <span className="gente">{v.personas.join(", ")}</span>}
+                      </div>
+                    ))}
+                    <div className="meta">{off ? "Sin señal" : "En vivo"} · precisión ±{Math.round(f.exactitud||0)} m</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ===================== VISOR (público) =====================
+    function Visor({ go }){
+      return (
+        <div className="pantalla">
+          <div className="topbar">
+            <div>
+              <div className="titulo">Rastreo en vivo</div>
+              <div className="sub">Seguimiento de recorridas</div>
+            </div>
+            <div className="right">
+              <button className="tb-btn" onClick={()=>go("track")}>{Ico.señal} Transmitir</button>
+            </div>
+          </div>
+          <MapaVivo/>
+        </div>
+      );
+    }
+
+    // ===================== TRACKER (carga + transmisión) =====================
+    function Tracker({ go }){
+      const saved = parseJSON(localStorage.getItem("visita_cfg"), {});
+      const [referencia, setReferencia] = useState(saved.referencia || "");
+      const [vehiculos, setVehiculos]   = useState(saved.vehiculos || [{ tipo:"camioneta", nombre:"", personas:[""] }]);
+      const [activo, setActivo] = useState(false);
+      const [pos, setPos]       = useState(null);
+      const [error, setError]   = useState("");
+      const [stale, setStale]   = useState(false);
+      const watchRef = useRef(null);
+      const wakeRef  = useRef(null);
+      const lastSent = useRef(0);
+      const posRef   = useRef(null);
+      const unitId   = useRef(getUnitId());
+
+      // handlers de edición
+      const h = {
+        setVeh:  (i,k,v) => setVehiculos(a => a.map((x,j)=> j===i ? {...x,[k]:v} : x)),
+        delVeh:  (i)     => setVehiculos(a => a.filter((_,j)=>j!==i)),
+        addVeh:  ()      => setVehiculos(a => [...a, { tipo:"camioneta", nombre:"", personas:[""] }]),
+        setPer:  (i,pi,v)=> setVehiculos(a => a.map((x,j)=> j===i ? {...x, personas:x.personas.map((p,k)=>k===pi?v:p)} : x)),
+        addPer:  (i)     => setVehiculos(a => a.map((x,j)=> j===i ? {...x, personas:[...x.personas, ""]} : x)),
+        delPer:  (i,pi)  => setVehiculos(a => a.map((x,j)=> j===i ? {...x, personas:x.personas.filter((_,k)=>k!==pi)} : x)),
+        movePer: (fromI,pi,toI) => setVehiculos(a => {
+          const nombre = a[fromI].personas[pi];
+          return a.map((x,j)=>{
+            if (j===fromI) return {...x, personas:x.personas.filter((_,k)=>k!==pi)};
+            if (j===toI)   return {...x, personas:[...x.personas, nombre]};
+            return x;
+          });
+        }),
+      };
+
+      const limpios = () => vehiculos
+        .map(v => ({ tipo:v.tipo, nombre:v.nombre.trim(), personas:v.personas.map(p=>p.trim()).filter(Boolean) }))
+        .filter(v => v.nombre || v.personas.length);
+
+      async function pedirWakeLock(){
+        try { if ("wakeLock" in navigator) wakeRef.current = await navigator.wakeLock.request("screen"); } catch(e){}
+      }
+      useEffect(() => {
+        const re = () => { if (activo && document.visibilityState === "visible") pedirWakeLock(); };
+        document.addEventListener("visibilitychange", re);
+        return () => document.removeEventListener("visibilitychange", re);
+      }, [activo]);
+
+      async function enviar(p){
+        const veh = limpios();
+        const fila = {
+          unit_id: unitId.current,
+          referencia: referencia.trim() || "Recorrida",
+          tipo: (veh[0] || {}).tipo || "otro",
+          vehiculos: JSON.stringify(veh),
+          personas: JSON.stringify(veh.flatMap(v => v.personas)),
+          lat:p.coords.latitude, lng:p.coords.longitude,
+          rumbo:p.coords.heading, velocidad:p.coords.speed, exactitud:p.coords.accuracy,
+          actualizado:new Date().toISOString(), activo:true,
+        };
+        const { error } = await sb.from("posiciones").upsert(fila, { onConflict:"unit_id" });
+        setError(error ? "Sin conexión con el servidor (revisá la configuración de Supabase)." : "");
+      }
+
+      function iniciar(){
+        if (!navigator.geolocation) { setError("Este dispositivo no tiene GPS disponible."); return; }
+        localStorage.setItem("visita_cfg", JSON.stringify({ referencia, vehiculos }));
+        setActivo(true); pedirWakeLock();
+        watchRef.current = navigator.geolocation.watchPosition(
+          (p) => {
+            setPos(p); posRef.current = p; setStale(false);
+            const ahora = Date.now();
+            if (ahora - lastSent.current >= INTERVALO_SEG*1000) { lastSent.current = ahora; enviar(p); }
+          },
+          (e) => setError("GPS: " + e.message),
+          { enableHighAccuracy:true, maximumAge:2000, timeout:15000 }
+        );
+      }
+      async function detener(){
+        if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current);
+        try { if (wakeRef.current) await wakeRef.current.release(); } catch(e){}
+        await sb.from("posiciones").update({ activo:false, actualizado:new Date().toISOString() }).eq("unit_id", unitId.current);
+        setActivo(false); setPos(null);
+      }
+
+      // marca "sin señal"
+      useEffect(() => {
+        if (!activo) return;
+        const t = setInterval(() => { if (pos && Date.now() - pos.timestamp > OFFLINE_SEG*1000) setStale(true); }, 5000);
+        return () => clearInterval(t);
+      }, [activo, pos]);
+
+      // re-envía al cambiar la composición del grupo durante la transmisión
+      useEffect(() => {
+        if (!activo) return;
+        const t = setTimeout(() => { if (posRef.current) enviar(posRef.current); }, 400);
+        return () => clearTimeout(t);
+      }, [vehiculos, activo]);
+
+      // ---- transmitiendo: pantalla dividida (mapa + editor del grupo) ----
+      if (activo) {
+        localStorage.setItem("visita_cfg", JSON.stringify({ referencia, vehiculos }));
+        return (
+          <div className="pantalla">
+            <div className="topbar">
+              <span className={"estado" + (stale ? " warn" : "")}>
+                <span className="dot"></span>
+                {stale ? "Buscando señal" : "Transmitiendo"}
+                <span className="ref">· {referencia || "Recorrida"}</span>
+              </span>
+              <div className="right">
+                <button className="btn-danger-ghost" onClick={detener}>Finalizar</button>
+              </div>
+            </div>
+            <div className="split">
+              <div className="split-map">
+                <MapaVivo/>
+                {pos && (
+                  <div className="chip">
+                    <span className="c">{pos.coords.latitude.toFixed(5)}, {pos.coords.longitude.toFixed(5)}</span>{" "}
+                    <span className="e">· ±{Math.round(pos.coords.accuracy)} m</span>
+                  </div>
+                )}
+              </div>
+              <div className="split-edit">
+                <div className="edit-head">Grupo en ruta · mové o quitá personas</div>
+                <div className="wrap">
+                  <EditorVehiculos vehiculos={vehiculos} h={h} mover={true} />
+                </div>
+              </div>
+            </div>
+            {error && <div style={{background:"#fef2f2",color:"var(--danger)",fontSize:13,padding:"8px 14px",borderTop:"1px solid #fecaca"}}>{error}</div>}
+          </div>
+        );
+      }
+
+      // ---- formulario de carga inicial ----
+      const puedeIniciar = limpios().length > 0;
+      return (
+        <div className="pantalla">
+          <div className="topbar">
+            <button className="tb-btn tb-icon" onClick={()=>go("view")}>{Ico.volver}</button>
+            <div>
+              <div className="titulo">Cargar grupo de visita</div>
+              <div className="sub">Vehículos y quién va en cada uno</div>
+            </div>
+          </div>
+          <div className="scroll">
+            <div className="form">
+              <div className="card">
+                <label>Referencia de la visita (opcional)</label>
+                <input value={referencia} onChange={e=>setReferencia(e.target.value)} placeholder="Ej: Visita semanal · Chalet 4" />
+              </div>
+              <div className="card">
+                <h3>Vehículos del grupo</h3>
+                <EditorVehiculos vehiculos={vehiculos} h={h} mover={false} />
+              </div>
+              {error && <p className="err">{error}</p>}
+              <button className="btn btn-primary" disabled={!puedeIniciar} onClick={iniciar}>Iniciar transmisión</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===================== APP =====================
+    function App(){
+      const rol = new URLSearchParams(location.search).get("rol");
+      const [mode, setMode] = useState(rol === "recorrida" ? "track" : "view");
+      if (mode === "track") return <Tracker go={setMode} />;
+      return <Visor go={setMode} />;
+    }
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
